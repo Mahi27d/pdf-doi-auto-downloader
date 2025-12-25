@@ -6,41 +6,41 @@ from pathlib import Path
 from bs4 import BeautifulSoup
 from pdfminer.high_level import extract_text
 
-# DOI regex
+# DOI pattern
 DOI_REGEX = re.compile(r'\b10\.\d{4,9}/[-._;()/:A-Z0-9]+\b', re.I)
 
-# Simple browser UA (same behavior as your first code)
+# Simple User-Agent (same behavior as basic working scripts)
 HEADERS = {
     "User-Agent": "Mozilla/5.0"
 }
 
 def setup_logger(log_file):
-    logger = logging.getLogger("DOWNLOADER")
+    logger = logging.getLogger("PDF_DOWNLOADER")
     logger.setLevel(logging.INFO)
     logger.handlers.clear()
 
-    fh = logging.FileHandler(log_file, encoding="utf-8")
+    handler = logging.FileHandler(log_file, encoding="utf-8")
     formatter = logging.Formatter("%(asctime)s | %(message)s")
-    fh.setFormatter(formatter)
-    logger.addHandler(fh)
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
     return logger
 
 def extract_doi(pdf_path):
     try:
         text = extract_text(pdf_path, maxpages=2)
-        m = DOI_REGEX.search(text or "")
-        return m.group(0).lower() if m else None
+        match = DOI_REGEX.search(text or "")
+        return match.group(0).lower() if match else None
     except Exception:
         return None
 
-def download_pdfs(url, out_dir="downloaded_pdfs"):
-    out = Path(out_dir)
+def download_pdfs(url, output_dir="downloaded_pdfs"):
+    out = Path(output_dir)
     out.mkdir(exist_ok=True)
 
     logger = setup_logger(out / "process.log")
-    logger.info(f"START | {url}")
+    logger.info(f"START | URL: {url}")
 
-    # SINGLE request (important)
+    # SINGLE request only (critical for compatibility)
     response = requests.get(url, headers=HEADERS, timeout=30)
     logger.info(f"Website status: {response.status_code}")
 
@@ -73,18 +73,22 @@ def download_pdfs(url, out_dir="downloaded_pdfs"):
             temp.write_bytes(r.content)
 
             doi = extract_doi(temp)
-            name = doi.replace("/", "_") + ".pdf" if doi else "NO_DOI_" + pdf_url.split("/")[-1]
+            filename = (
+                doi.replace("/", "_") + ".pdf"
+                if doi
+                else "NO_DOI_" + pdf_url.split("/")[-1].split("?")[0]
+            )
 
-            temp.rename(out / name)
+            temp.rename(out / filename)
             hashes.add(file_hash)
             downloaded += 1
 
-            logger.info(f"Saved: {name}")
+            logger.info(f"Saved: {filename}")
 
         except Exception as e:
             logger.info(f"Failed: {pdf_url} | {e}")
 
     hash_file.write_text("\n".join(hashes))
-    logger.info("END")
+    logger.info("END PROCESS")
 
     return downloaded
