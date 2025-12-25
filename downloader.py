@@ -6,10 +6,10 @@ from pathlib import Path
 from bs4 import BeautifulSoup
 from pdfminer.high_level import extract_text
 
-# DOI pattern
+# DOI regex
 DOI_REGEX = re.compile(r'\b10\.\d{4,9}/[-._;()/:A-Z0-9]+\b', re.I)
 
-# Simple User-Agent (same behavior as basic working scripts)
+# Simple UA (matches first working behavior)
 HEADERS = {
     "User-Agent": "Mozilla/5.0"
 }
@@ -40,7 +40,6 @@ def download_pdfs(url, output_dir="downloaded_pdfs"):
     logger = setup_logger(out / "process.log")
     logger.info(f"START | URL: {url}")
 
-    # SINGLE request only (critical for compatibility)
     response = requests.get(url, headers=HEADERS, timeout=30)
     logger.info(f"Website status: {response.status_code}")
 
