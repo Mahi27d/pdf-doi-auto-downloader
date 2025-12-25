@@ -1,11 +1,10 @@
 import streamlit as st
 from pathlib import Path
-from pdf_doi_downloader_core import download_and_rename
+from downloader import download_pdfs
 
-st.set_page_config(page_title="PDF DOI Auto Downloader", layout="wide")
+st.set_page_config(page_title="PDF Downloader", layout="wide")
 
-st.title("PDF DOI Auto Downloader")
-st.caption("Logs • User-Agent • IP Blocking Checks")
+st.title("PDF Downloader (Stable Version)")
 
 url = st.text_input("Enter website URL")
 
@@ -13,23 +12,14 @@ def read_logs():
     log_file = Path("downloaded_pdfs/process.log")
     return log_file.read_text() if log_file.exists() else ""
 
-if st.button("Start Download"):
+if st.button("Download PDFs"):
     if not url:
-        st.error("Please enter a URL")
+        st.error("Enter a URL")
     else:
-        with st.spinner("Running downloader..."):
-            result = download_and_rename(url)
+        with st.spinner("Downloading PDFs..."):
+            count = download_pdfs(url)
 
-        if "error" in result:
-            st.error(result["error"])
-        else:
-            st.success("Completed successfully")
-            st.subheader("Summary")
-            st.json(result)
+        st.success(f"Downloaded {count} new PDFs")
 
-st.subheader("Process Logs")
-st.text_area(
-    "Logs",
-    read_logs(),
-    height=400
-)
+st.subheader("Logs")
+st.text_area("Process log", read_logs(), height=400)
