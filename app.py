@@ -1,10 +1,16 @@
 import streamlit as st
+import sys
 from pathlib import Path
+
+# Ensure local imports work in Streamlit Cloud / GitHub
+sys.path.append(str(Path(__file__).parent))
+
 from downloader import download_pdfs
 
-st.set_page_config(page_title="PDF Downloader", layout="wide")
+st.set_page_config(page_title="PDF DOI Auto Downloader", layout="wide")
 
-st.title("PDF Downloader (Stable Version)")
+st.title("PDF DOI Auto Downloader (Stable)")
+st.caption("Downloads PDFs and renames using DOI or NO_DOI")
 
 url = st.text_input("Enter website URL")
 
@@ -14,12 +20,16 @@ def read_logs():
 
 if st.button("Download PDFs"):
     if not url:
-        st.error("Enter a URL")
+        st.error("Please enter a website URL")
     else:
         with st.spinner("Downloading PDFs..."):
             count = download_pdfs(url)
 
         st.success(f"Downloaded {count} new PDFs")
 
-st.subheader("Logs")
-st.text_area("Process log", read_logs(), height=400)
+st.subheader("Process Logs")
+st.text_area(
+    "Logs",
+    read_logs(),
+    height=400
+)
